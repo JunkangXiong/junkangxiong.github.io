@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>奶茶本命 MBTI</title>
+    <style>
+        :root { --text-dark: #2c2c2c; --matcha: #88b04b; --bg-cream: #f8f5ee; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg-cream); font-family: "PingFang SC", sans-serif; }
+
+        /* --- 页面容器 --- */
+        .page-container { display: none; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
+        .page-container.active { display: flex; flex-direction: column; animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- 1. 首页 --- */
+        #page-home { background: url('底图.png') center/cover no-repeat; touch-action: none; }
+        .stage { position: absolute; top: 20%; left: 0; width: 100%; height: 50%; display: flex; justify-content: center; align-items: center; z-index: 10; }
+        .doll-img { position: absolute; width: 100%; max-width: 360px; opacity: 0; transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); filter: drop-shadow(0 20px 30px rgba(0,0,0,0.15)); pointer-events: none; }
+        .doll-img.next { transform: translateX(120%) scale(0.8); opacity: 0; }
+        .doll-img.prev { transform: translateX(-120%) scale(0.8); opacity: 0; }
+        .doll-img.active { opacity: 1; z-index: 100; animation: dollBreathe 4s ease-in-out infinite; }
+        @keyframes dollBreathe { 0%, 100% { transform: translateX(0) scale(1.2) translateY(0); } 50% { transform: translateX(0) scale(1.25) translateY(-15px); } }
+        .home-ui { position: absolute; bottom: 6%; width: 100%; text-align: center; z-index: 20; }
+        #home-name { font-size: 42px; font-weight: 900; color: var(--text-dark); margin-bottom: 25px; text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff; }
+        .btn-main { background: #2c2c2c; color: #fff; border: none; padding: 20px 50px; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        /* --- 2. 图鉴页 --- */
+        #page-intro { background: url('底图.png') center/cover no-repeat; overflow-y: auto; padding-bottom: 120px; -webkit-overflow-scrolling: touch; }
+        .intro-header { text-align: center; padding: 50px 20px 20px; }
+        .intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+        .tea-card { background: #fff; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+        .card-img-box { height: 140px; display: flex; justify-content: center; align-items: center; padding: 10px; }
+        .card-img-box img { height: 100%; object-fit: contain; }
+        .card-info { padding: 10px; flex: 1; }
+        .mbti-tag { font-size: 9px; background: #333; color: #fff; padding: 2px 4px; border-radius: 3px; }
+        .story { font-size: 10px; color: #777; line-height: 1.4; margin-top: 5px; text-align: justify; }
+        .fixed-bottom-bar { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #f8f5ee 40%); text-align: center; z-index: 1000; }
+
+        /* --- 3. 测试页 --- */
+        #page-quiz { background: url('底图.png') center/cover no-repeat; align-items: center; padding: 20px; }
+        .progress-wrapper { width: 80%; height: 6px; background: rgba(0,0,0,0.05); border-radius: 10px; margin-top: 40px; overflow: hidden; }
+        #inner-bar { width: 0%; height: 100%; background: var(--matcha); transition: width 0.5s ease; }
+        .scene-frame { width: 90%; max-width: 420px; aspect-ratio: 16 / 9; background: #fff; padding: 10px 10px 20px 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transform: rotate(1deg); margin: 30px 0; border-radius: 4px; }
+        .scene-frame img { width: 100%; height: 100%; object-fit: cover; }
+        .question-text { font-size: 19px; font-weight: bold; text-align: center; margin-bottom: 30px; line-height: 1.5; min-height: 60px; color: #333; }
+        .options-wrapper { width: 100%; max-width: 300px; }
+        .option-btn { width: 100%; background: #fff; border: 1.5px solid #ebebeb; padding: 16px 20px; margin-bottom: 15px; border-radius: 15px 35px 12px 28px; text-align: center; font-size: 15px; cursor: pointer; transition: 0.2s; color: #444; }
+        .option-btn:active { background: var(--matcha); color: #fff; transform: scale(0.95); }
+
+        /* --- 4. 结果页 --- */
+        #page-result { padding: 0; }
+        .result-wrapper { width: 100vw; height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
+        .res-section { width: 100vw; height: 100vh; scroll-snap-align: start; position: relative; overflow: hidden; }
+        .first-view { background-size: cover; background-position: center; display: flex; flex-direction: column; align-items: center; }
+        .header-content { margin-top: 80px; text-align: center; color: #fff; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .dang-title { font-size: 22px; font-weight: 900; display: block; margin-bottom: 5px; }
+        .mbti-name { font-size: 42px; font-weight: 900; letter-spacing: 2px; }
+        .scroll-hint { position: absolute; bottom: 30px; color: #fff; text-align: center; animation: bounce 2s infinite; font-size: 13px; opacity: 0.8; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-8px);} }
+        .detail-view { background-color: var(--bg-cream); padding: 25px; display: flex; flex-direction: column; }
+        .doll-top-right { position: absolute; top: 40px; right: -25px; width: 60%; max-width: 250px; z-index: 10; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.15)); }
+        .mutter-section { margin-top: 20px; width: 62%; }
+        .mutter-bubble { background: #fff; padding: 18px; border-radius: 25px 25px 25px 0; border: 2.2px solid var(--text-dark); box-shadow: 6px 6px 0px rgba(0,0,0,0.05); }
+        .mutter-bubble p { margin: 0; font-size: 13px; color: #555; line-height: 1.6; font-style: italic; }
+        .profile-card { margin-top: 30px; width: 75%; z-index: 5; }
+        .profile-title { font-size: 22px; font-weight: 900; margin-bottom: 20px; display: flex; align-items: center; color: var(--text-dark); }
+        .profile-title::after { content: ""; flex: 1; height: 3px; background: #eee; margin-left: 10px; border-radius: 2px; }
+        .profile-item { margin-bottom: 20px; }
+        .res-theme-tag { display: inline-block; font-size: 12px; color: white; padding: 3px 10px; border-radius: 6px; font-weight: bold; margin-bottom: 8px; }
+        .profile-item p { font-size: 13px; color: #444; margin: 0; line-height: 1.7; text-align: justify; }
+        .personality-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
+        .personality-tags span { font-size: 11px; padding: 3px 12px; border-radius: 50px; background: rgba(255,255,255,0.5); border: 1px solid #ccc; }
+        .coupon-box { margin-top: auto; margin-bottom: 40px; background: #fff; border-radius: 18px; padding: 18px; display: flex; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 2px solid #eee; position: relative; }
+        .coupon-box::after { content: ""; position: absolute; left: 85px; top: 15px; bottom: 15px; border-left: 2px dashed #f0f0f0; }
+        .coupon-val { flex: 0 0 75px; color: #d25b5b; text-align: center; }
+        .coupon-val big { font-size: 36px; font-weight: 900; }
+        .coupon-info { flex: 1; padding-left: 25px; display: flex; align-items: center; justify-content: space-between; }
+        .coupon-text p { margin: 0; font-size: 15px; font-weight: bold; color: #333; }
+        .coupon-text span { font-size: 11px; color: #bbb; }
+        .audio-btn { width: 38px; height: 38px; background: #f8f8f8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #eee; cursor: pointer;}
+        .btn-claim { background: var(--text-dark); color: #fff; border: none; padding: 12px 18px; border-radius: 10px; font-size: 14px; font-weight: bold; margin-left: 15px; }
+    </style>
+</head>
+<body>
+
+    <!-- 第一页 -->
+    <section id="page-home" class="page-container active">
+        <div class="stage">
+            <img src="芭喜乐.png" class="doll-img active" data-name="芭喜乐">
+            <img src="布困.png" class="doll-img next" data-name="布困">
+            <img src="绿过.png" class="doll-img next" data-name="绿过">
+            <img src="茉清然.png" class="doll-img next" data-name="茉清然">
+            <img src="莫蓝.png" class="doll-img next" data-name="莫蓝">
+            <img src="闲奶盖.png" class="doll-img next" data-name="闲奶盖">
+            <img src="枣点过去.png" class="doll-img next" data-name="枣点过去">
+            <img src="珍幸福.png" class="doll-img next" data-name="珍幸福">
+        </div>
+        <div class="home-ui">
+            <div id="home-name">芭喜乐</div>
+            <button class="btn-main" onclick="goToPage('page-intro')">看看你的本命奶茶 MBTI</button>
+        </div>
+    </section>
+
+    <!-- 第二页 -->
+    <section id="page-intro" class="page-container">
+        <div class="intro-header"><h1>奶茶灵魂图鉴</h1><p>滑动查看你的精神单品</p></div>
+        <div class="intro-grid">
+            <div class="tea-card"><div class="card-img-box" style="background:#ffe4e1"><img src="芭喜乐.png"></div><div class="card-info"><h3>芭喜乐 <span class="mbti-tag">ENFP</span></h3><p class="story">拿到工资的瞬间，快乐喷发！</p></div></div>
+            <div class="tea-card"><div class="card-img-box" style="background:#eaddca"><img src="布困.png"></div><div class="card-info"><h3>布困 <span class="mbti-tag">INFP</span></h3><p class="story">肉体在敲键盘，灵魂在补觉。</p></div></div>
+            <div class="tea-card"><div class="card-img-box" style="background:#f2f7ed"><img src="绿过.png"></div><div class="card-info"><h3>绿过 <span class="mbti-tag">ISFJ</span></h3><p class="story">借着抹茶的绿，悄悄路过。</p></div></div>
+            <div class="tea-card"><div class="card-img-box" style="background:#fdf2f2"><img src="枣点过去.png"></div><div class="card-info"><h3>枣点过去 <span class="mbti-tag">ESTJ</span></h3><p class="story">只愿烦躁枣点过去。</p></div></div>
+            <div class="tea-card"><div class="card-img-box" style="background:#fdfdf2"><img src="茉清然.png"></div><div class="card-info"><h3>茉清然 <span class="mbti-tag">INFJ</span></h3><p class="story">不争不抢，禅意人生。</p></div></div>
+            <div class="tea-card"><div class="card-img-box" style="background:#e0f2f7"><img src="莫蓝.png"></div><div class="card-info"><h3>莫蓝 <span class="mbti-tag">ISFP</span></h3><p class="story">心碎调成蓝色的酒。</p></div></div>
+            <div class="tea-card"><div class="card-img-box" style="background:#f2f4f7"><img src="闲奶盖.png"></div><div class="card-info"><h3>闲奶盖 <span class="mbti-tag">INTP</span></h3><p class="story">封盖无聊，原地待机。</p></div></div>
+            <div class="tea-card"><div class="card-img-box" style="background:#fcf8ee"><img src="珍幸福.png"></div><div class="card-info"><h3>珍幸福 <span class="mbti-tag">ESFP</span></h3><p class="story">肚里有珠，心里有底。</p></div></div>
+        </div>
+        <div class="fixed-bottom-bar"><button class="btn-main" onclick="startQuiz()">开启灵魂测试</button></div>
+    </section>
+
+    <!-- 第三页 -->
+    <section id="page-quiz" class="page-container">
+        <div class="progress-wrapper"><div id="inner-bar"></div></div>
+        <div class="scene-frame"><img src="" id="quiz-img"></div>
+        <div class="question-text" id="quiz-q">加载中...</div>
+        <div class="options-wrapper" id="quiz-options"></div>
+    </section>
+
+    <!-- 第四页 -->
+    <section id="page-result" class="page-container">
+        <div class="result-wrapper">
+            <section class="res-section first-view" id="res-poster-bg">
+                <div class="header-content">
+                    <span class="dang-title">当当当当！✨</span>
+                    <h1 class="mbti-name" id="res-mbti-full">加载中...</h1>
+                </div>
+                <div class="scroll-hint">滑动查收灵魂档案<br>↓</div>
+            </section>
+            <section class="res-section detail-view">
+                <img src="" id="res-doll-final" class="doll-top-right">
+                <div class="mutter-section">
+                    <div class="mutter-bubble"><p id="res-mutter">...</p></div>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-title">本命说明书</div>
+                    <div class="profile-item"><span class="label res-theme-tag">⭐ 观察报告</span><p id="res-obs-text"></p></div>
+                    <div class="profile-item"><span class="label res-theme-tag">🔍 隐藏轶事</span><p id="res-fact-text"></p></div>
+                    <div class="personality-tags" id="res-tags-box"></div>
+                </div>
+                <div class="coupon-box">
+                    <div class="coupon-val"><span>￥</span><big>4</big></div>
+                    <div class="coupon-info">
+                        <div class="coupon-text"><p>本命补给金</p><span>满15.00可用 · 全系通用</span></div>
+                    </div>
+                    <button class="btn-claim" onclick="location.reload()">重新测试</button>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <script>
+        function goToPage(id) {
+            document.querySelectorAll('.page-container').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // 轮播逻辑
+        let cur = 0; const dolls = document.querySelectorAll('.doll-img');
+        const hName = document.getElementById('home-name');
+        let startX = 0; let timer = null;
+        function slide(dir) {
+            dolls[cur].classList.remove('active');
+            dolls[cur].classList.add(dir === 'next' ? 'prev' : 'next');
+            cur = (dir === 'next' ? cur + 1 : cur - 1 + dolls.length) % dolls.length;
+            dolls[cur].classList.remove('prev', 'next');
+            dolls[cur].classList.add('active');
+            hName.innerText = dolls[cur].dataset.name;
+        }
+        function startAuto() { timer = setInterval(() => slide('next'), 3000); }
+        document.getElementById('page-home').addEventListener('touchstart', e => { startX = e.touches[0].clientX; clearInterval(timer); });
+        document.getElementById('page-home').addEventListener('touchend', e => {
+            let diff = startX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) slide(diff > 0 ? 'next' : 'prev');
+            startAuto();
+        });
+        window.onload = startAuto;
+
+        // 测试逻辑数据
+        const qData = [
+            { q: "早九走进办公室，你最真实的灵魂状态是？", img: "布困图.png", a: [{t:"准备爆发的人体高压锅", r:"枣点过去"}, {t:"渴望原地隐身的抹茶粉", r:"绿过"}, {t:"没睡醒的咖啡豆，待机中", r:"布困"}] },
+            { q: "遇到不熟的同事突然向你走来，你会？", img: "绿过图.png", a: [{t:"低头看手机，假装没看到", r:"绿过"}, {t:"开启大脑空洞，礼貌微笑", r:"闲奶盖"}, {t:"热情安利最近买的好物", r:"珍幸福"}] },
+            { q: "面对堆积如山的工作，现在的你？", img: "枣点过去图.png", a: [{t:"内心咕嘟，快要煮开了", r:"枣点过去"}, {t:"万物皆空，不争不抢慢慢做", r:"茉清然"}, {t:"下班开炫芭乐，喜上加喜", r:"芭喜乐"}] },
+            { q: "茶水间有人正在分享八卦，你的反应是？", img: "珍幸福图.png", a: [{t:"快速路过，这热闹不属于我", r:"绿过"}, {t:"加入群聊，多巴胺满分", r:"珍幸福"}, {t:"灵魂出窍，盯着水流发呆", r:"闲奶盖"}] },
+            { q: "发工资的那一秒，你脑子里的第一反应？", img: "芭喜乐图.png", a: [{t:"立马开炫，芭喜乐本喜", r:"芭喜乐"}, {t:"有钱补气血了，买它", r:"枣点过去"}, {t:"感性泛滥，想写篇忧郁小文", r:"莫蓝"}] },
+            { q: "现在的体感更接近哪种状态？", img: "莫蓝图.png", a: [{t:"眼皮千斤重", r:"布困"}, {t:"忧郁女文青", r:"莫蓝"}, {t:"温暖平和", r:"茉清然"}] },
+            { q: "周末宅在家里，你通常如何度过？", img: "闲奶盖图.png", a: [{t:"刷手机直到思维彻底留白", r:"闲奶盖"}, {t:"回想往事，默默掉眼泪", r:"莫蓝"}, {t:"补觉，弥补周中的亏欠", r:"布困"}] },
+            { q: "朋友临时约你聚会，此刻你的心情？", img: "茉清然图.png", a: [{t:"不想动弹，只想独自佛系", r:"茉清然"}, {t:"立马梳洗打扮，全场最喜", r:"芭喜乐"}, {t:"开始焦虑，思考拒绝借口", r:"绿过"}] }
+        ];
+
+        // 核心结果配置库
+        const resultConfigs = {
+            "绿过": { fullName: "绿过 · 抹茶人格", mutter: "（其实也没想走啦，就是觉得茶水间那个距离真的很尴尬诶...你说我现在要是低头看手机，她会发现我吗？...哎呀脸怎么又绿了...）", obs: "看起来是一颗软糯安静的抹茶大福，其实内心戏多到能上演800集连续剧。非常擅长“眼神边缘化”技能，能够精准探测方圆十米内的社交危险源。如果你发现她正盯着某个地方出神，别担心，她不是在思考人生，她只是在努力缩减自己的存在感，试图开启物理意义上的“隐身模式", fact: "曾经为了躲避迎面走来的半熟不熟的同事，在公司那盆巨大的绿植后面纹丝不动地假装了整整20分钟盆栽，直到腿抽筋才伴随着一阵淡淡的抹茶清香悄悄溜走。这种事，她大概能记一辈子并在深夜反复羞耻。", tags: ["隐身模式", "拒绝CUE我", "高冷抹茶"], color: "#88b04b", poster: "绿过海报.png", doll: "绿过.png" },
+            "枣点过去": { fullName: "枣点过去 · 红枣人格", mutter: "（心里咕嘟咕嘟的，感觉头顶都要冒烟了。气血补上了，但耐心确实还没加载好。谁也别cue我...）", obs: "此时的你是一个处于“高压负温”状态的暖烘烘人格。虽然外表看起来只是有点微丧和红晕，但内心的吐槽能量已经足以烧开一整壶奶茶。对外界的噪音极其敏感，任何一点小事都可能成为点燃情绪的引信。这时候的你需要的是被厚毛毯包裹，而不是被道理说服。", fact: "生理期时能凭借惊人的生物本能，瞬间识别出方圆两公里内最松软、角度最完美的沙发位。据传说，她曾经因为男朋友一句‘你是不是又胖了’，沉默地盯着天花板数了三千多颗红枣，并在心里把他拉黑了八百次。", tags: ["气血低压", "静止模式", "拒绝画饼"], color: "#d25b5b", poster: "枣点过去海报.png", doll: "枣点过去.png" },
+            "芭喜乐": { fullName: "芭喜乐 · 芭乐人格", mutter: "（当当当当！发工资啦！感觉整个人都在发光！快乐就是要大声喊出来呀！）", obs: "移动的粉色多巴胺发射器！发工资对你来说不单纯是钱的问题，而是灵魂被重新点亮的瞬间。你的快乐阈值低得非常可爱，路边的一朵花、一张可爱的贴纸都能让你开心到起飞。你是典型的“当下先行者”，拒绝内耗，只负责在每一个喜悦的瞬间里疯狂蹦迪。", fact: "收到快递时的拆箱速度曾经被室友评价为“快到产生残影”，拆开之后如果刚好是自己喜欢的颜色，会对着空气做一个芭乐味的后空翻（虽然只是在脑内），并强行拉着路过的猫分享这种喜悦。", tags: ["多巴胺", "元气少女", "发薪日战神"], color: "#f2a6a6", poster: "芭喜乐海报.png", doll: "芭喜乐.png" },
+            "布困": { fullName: "布困 · 咖啡人格", mutter: "（我是谁？我在哪？早九的办公室为什么会有太阳...我的灵魂还在咖啡机里提取中...）", obs: "凌晨三点在思考宇宙哲学，早上九点在工位表演“肉体搬运”。你的灵魂长期处于一种“正在重新连接”的断断续续状态。你对咖啡的依赖已经超越了味觉，那是一种神圣的唤醒仪式。在彻底清醒之前，你是一只温顺但随时可能宕机的咖啡味丧偶。", fact: "能够闭着眼睛，仅凭嗅觉和微弱的记忆，从工位精准地摸到茶水间咖啡机的位置，且中途能完美避开三名试图和你讨论工作进度的同事。这种“盲操”技能，是长年累月的早九生活换来的勋章。", tags: ["灵魂待机", "早九受害者", "咖啡续命"], color: "#a67c52", poster: "布困海报.png", doll: "布困.png" },
+            "珍幸福": { fullName: "珍幸福 · 珍奶人格", mutter: "（吸溜...这颗珍珠好Q！下周还要和姐妹来。生活嘛，就是要和喜欢的人一起吃高热量呀！）", obs: "人格里充满了Q弹的黑色多巴胺，是典型的“全糖主义”倡导者。对你来说，世界上没有什么烦恼是一杯满杯珍珠奶茶搞不定的，如果有，那就加双份珍珠！你是朋友圈里的快乐中和剂，擅长发现生活里的高甜瞬间，并致力于把这种满足感传染给身边的每一个人。", fact: "手机相册里存了500多张和好姐妹的自拍合影，但本人私下最自豪的隐藏技能竟然是：能用细长的吸管，蒙着眼睛精准地吸起杯底最后那一颗滑不溜秋的珍珠。这种对珍珠的执念，连奶茶店老板都直呼内行。", tags: ["碳水快乐", "姐妹万岁", "珍珠狂魔"], color: "#4a3728", poster: "珍幸福海报.png", doll: "珍幸福.png" },
+            "闲奶盖": { fullName: "闲奶盖 · 奶盖人格", mutter: "（脑子里有一朵云飘过去了...无聊吗？不觉得诶。把世界封在盖子外面，感觉超赞的。）", obs: "进入了极致的“留白状态”。大脑里覆盖着一层厚厚的、带有海盐咸味的奶盖封印，自动过滤掉了外界的所有喧嚣。与其说你在放空，不如说你在给宇宙发送“暂时离线”的信号。这种高级的清闲是你自我修复的独特方式，在这一刻，你拥有绝对的精神自由。", fact: "曾经盯着百叶窗投影在墙上的影子看了一整个下午，期间大脑由于转速过慢，甚至开始认真思考：如果人类也是由芝士奶盖做的，是不是我们就再也不用担心心碎了，因为碎了也能重新融化在一起。", tags: ["精神留白", "自动离线", "咸甜人生"], color: "#ced4da", poster: "闲奶盖海报.png", doll: "闲奶盖.png" },
+            "茉清然": { fullName: "茉清然 · 茉莉人格", mutter: "（万物皆空，不争不抢。这口茉莉喝下去，感觉内心的杂草都除干净了。随缘吧...）", obs: "养生血脉觉醒的终极形态。当周围的人都在为各种琐事焦头烂额、在群里吵得不可开交时，你正忙着给工位上的那一小盆多肉浇水。你拥有极强的情绪过滤网，万物皆空，唯有茉莉清香。这种“大隐隐于市”的佛系姿态，其实是你最硬核的温柔。", fact: "曾经在公园散步时，试图和一位晨练的老大爷认真讨论哪种泡茶姿势对护膝更有利，结果因为聊得太投机、太佛系，差点当场坐下来入定，错过了回家的最后一班公交车。", tags: ["拒绝内卷", "佛系青年", "茉莉清香"], color: "#c3e6cb", poster: "茉清然海报.png", doll: "茉清然.png" },
+            "莫蓝": { fullName: "莫蓝 · 蓝调人格", mutter: "（窗外的雨滴在赛跑...突然觉得，忧郁也是一种很高级的养分呢。心碎了，正好用来调酒。）", obs: "忧郁系首席表演艺术家。下雨天是你的天然滤镜，心碎是你的创作养分。你拥有极其敏感的触角，能捕捉到空气中每一丝感性的流动。蓝色的调色盘其实是你最温柔的保护色，让你在喧闹的现实中，始终拥有一块属于自己的深海避难所。", fact: "会在深夜一点半，对着月光给路边的流浪猫读一首自创的、辞藻极其华丽但其实谁也听不懂的朦胧诗。读完之后还会一本正经地问猫：“你觉得这句词，是用深蓝色还是湖蓝色来形容比较好？”", tags: ["忧郁文青", "雨天限定", "感性至上"], color: "#a5d8ff", poster: "莫蓝海报.png", doll: "莫蓝.png" }
+        };
+
+        let qIdx = 0; let score = {};
+        function startQuiz() { qIdx = 0; score = {}; goToPage('page-quiz'); renderQ(); }
+        function renderQ() {
+            const d = qData[qIdx];
+            document.getElementById('inner-bar').style.width = ((qIdx + 1) / qData.length * 100) + "%";
+            document.getElementById('quiz-img').src = d.img;
+            document.getElementById('quiz-q').innerText = d.q;
+            let h = "";
+            d.a.forEach(item => { h += `<div class="option-btn" onclick="nextQ('${item.r}')">${item.t}</div>`; });
+            document.getElementById('quiz-options').innerHTML = h;
+        }
+        function nextQ(r) {
+            score[r] = (score[r] || 0) + 1; qIdx++;
+            if (qIdx < qData.length) renderQ();
+            else showFinalResult();
+        }
+
+        function showFinalResult() {
+            let winner = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b);
+            const config = resultConfigs[winner] || resultConfigs["绿过"];
+            document.getElementById('res-poster-bg').style.backgroundImage = `url('${config.poster}')`;
+            document.getElementById('res-mbti-full').innerText = config.fullName;
+            document.getElementById('res-doll-final').src = config.doll;
+            document.getElementById('res-mutter').innerText = config.mutter;
+            document.getElementById('res-obs-text').innerText = config.obs;
+            document.getElementById('res-fact-text').innerText = config.fact;
+            document.querySelectorAll('.res-theme-tag').forEach(el => el.style.backgroundColor = config.color);
+            let tagHtml = ""; config.tags.forEach(t => tagHtml += `<span>${t}</span>`);
+            document.getElementById('res-tags-box').innerHTML = tagHtml;
+            goToPage('page-result');
+            document.querySelector('.result-wrapper').scrollTop = 0;
+        }
+    </script>
+</body>
+</html>
